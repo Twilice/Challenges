@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="fibonacci" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        const HEIGHT = 800;
+        const WIDTH = 800;
+
+        var canvas;
+        var ctx;
+        const lerpTime = 2;
+        var elapsedTime = 0;
+        var startAngle = Math.PI / 24;
+        var midAngle = Math.PI / 2;
+        var endAngle = Math.PI / 5.97;
+
+        function setup() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            ctx.canvas.height = HEIGHT;
+            ctx.canvas.width = WIDTH;
+
+            render(0);
+        }
+
+        var prevTime = 0;
+        var deltaTime = 0;
+        function render(time) {
+            // time stuff
+            deltaTime = GetDeltaTime(time);
+         
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            ctx.save();
+
+            // draw
+            ctx.translate(WIDTH / 2, HEIGHT);
+            drawBranch(0, HEIGHT/4, 0, lerpTime);
+
+            ctx.restore();
+
+            requestAnimationFrame(render);
+        }
+
+        function drawBranch(itr, len, angle, lerpTime) {
+
+            let lerpVal = GetLerpVal(lerpTime);
+
+            let lerpTimeAngle = lerpTime;
+            for(let i = 0; i < 10-itr; i++) {
+                lerpTimeAngle = lerpTimeAngle * 1.1 + 0.5;
+            }
+
+            let lerpedLen = len*lerpVal;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.rotate(angle);
+            ctx.lineTo(0, -lerpedLen);
+            ctx.stroke();
+            ctx.translate(0, -lerpedLen);
+
+            if (itr < 10) {
+                ctx.save();
+                let lerpValAngle = GetLerpVal(lerpTimeAngle);
+                let lerpedAngle;
+                if (lerpValAngle < 0.45) {
+                    lerpedAngle = lerp(startAngle, midAngle, remap(lerpValAngle, 0, 0.45, 0, 1));
+                }
+                else if (lerpValAngle < 0.55) {
+                    lerpedAngle = midAngle;
+                }
+                else {
+                    lerpedAngle = lerp(midAngle, endAngle, ease(remap(lerpValAngle, 0.55, 1.0, 0, 1)));
+                }
+                drawBranch(itr + 1, lerpedLen * 0.7, -lerpedAngle, lerpTime * 1.1 + 0.5);
+                ctx.restore();
+                ctx.save();
+                drawBranch(itr + 1, lerpedLen * 0.7, lerpedAngle, lerpTime * 1.1 + 0.5);
+                ctx.restore();
+            }
+        }
+
+        function GetLerpVal(lerpTime) {
+            if(elapsedTime < lerpTime) {
+                return lerpVal = elapsedTime / lerpTime;
+            }
+            else
+            {
+                return lerpVal = 1;
+            }
+        }
+
+        function GetDeltaTime(time) {
+            let dt = (time - prevTime) * 0.001;
+            prevTime = time;
+            elapsedTime += dt;
+            return dt;
+        }
+
+        function lerp(x, y, samplePoint) {
+            return x + samplePoint * (y - x);
+        }
+
+        function inverseLerp(x, y, value) {
+            return (value - x) / (y - x);
+        }
+
+        function remap(value, inMin, inMax, outMin, outMax) {
+            return lerp(outMin, outMax, inverseLerp(inMin, inMax, value));
+        }
+
+        function ease(t) {
+            return 2 * t + 3 *(t*t) + -4 * (t*t*t);
+        }
+    </script>
+</head>
+
+<body onload="setup();">
+    <body>
+        <canvas id="canvas" style="border: solid 1px;"></canvas>
+    </body>
+</body>
+
+</html>
